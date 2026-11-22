@@ -1,0 +1,464 @@
+/* ============================================================================
+   Aurora glass skin — material layer.
+   Palette lives in tokens.json (registered as theme tokens); this sheet only
+   adds what tokens cannot express: the wallpaper, glass blur, the mint-edged
+   active row, the gradient primary action and the popover chrome.
+   Everything is scoped to body[data-aurora-glass] so the skin leaves DSH's own
+   light/dark themes untouched when it is not active.
+   ========================================================================== */
+
+/* ---------- wallpaper ------------------------------------------------------ */
+/* A bright aurora field, not a dark tint: frosted panels only read as glass when
+   there is colour behind them to blur. NPP does the same — a luminous wallpaper
+   with dark translucent panes on top. */
+html:has(body[data-aurora-glass]) {
+  background-color: #071110;
+  background-image:
+    radial-gradient(130% 112% at 50% 46%, rgba(3, 8, 7, 0) 46%, rgba(3, 8, 7, 0.42) 100%),
+    radial-gradient(1150px 900px at 26% -6%, rgba(52, 235, 140, 0.34), rgba(52, 235, 140, 0) 62%),
+    radial-gradient(880px 760px at 108% 12%, rgba(80, 140, 255, 0.7), rgba(80, 140, 255, 0) 62%),
+    radial-gradient(1000px 780px at 94% 108%, rgba(74, 232, 214, 0.55), rgba(74, 232, 214, 0) 60%),
+    radial-gradient(820px 640px at 12% 106%, rgba(255, 174, 80, 0.34), rgba(255, 174, 80, 0) 66%),
+    radial-gradient(760px 620px at 26% 88%, rgba(168, 120, 255, 0.26), rgba(168, 120, 255, 0) 70%),
+    radial-gradient(640px 540px at 74% 64%, rgba(126, 128, 255, 0.16), rgba(126, 128, 255, 0) 70%),
+    radial-gradient(900px 620px at 44% 4%, rgba(214, 255, 238, 0.2), rgba(214, 255, 238, 0) 66%),
+    radial-gradient(1280px 900px at 46% 34%, rgba(48, 198, 148, 0.26), rgba(48, 198, 148, 0) 66%),
+    radial-gradient(1080px 820px at 58% 88%, rgba(58, 205, 196, 0.22), rgba(58, 205, 196, 0) 66%),
+    radial-gradient(1100px 760px at 54% 62%, rgba(96, 214, 190, 0.2), rgba(96, 214, 190, 0) 64%),
+    linear-gradient(118deg, rgba(150, 255, 214, 0.16) 0%, rgba(150, 255, 214, 0) 30%, rgba(150, 255, 214, 0) 66%, rgba(255, 196, 120, 0.1) 100%),
+    linear-gradient(162deg, #143028 0%, #0d1f1a 44%, #112a23 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: auto;
+}
+
+/* The user's own photo (Settings → 极光玻璃 → 壁纸) rides on a fixed root
+   pseudo-element *behind* the shell, so every translucent pane blurs the real
+   image instead of only the aurora gradients. With no photo the layer stays
+   invisible and the gradients above are the wallpaper. */
+html:has(body[data-aurora-glass])::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(168deg, rgba(8, 26, 22, 0.34) 0%, rgba(4, 10, 9, 0.52) 100%),
+    var(--aurora-photo, none);
+  background-position: center;
+  /* 1.4.0 — fit the whole picture instead of cropping it: the window keeps the
+     wallpaper's aspect ratio and the aurora behind shows in the leftover band. */
+  background-size: var(--aurora-photo-fit, contain);
+  background-repeat: no-repeat;
+  opacity: var(--aurora-photo-opacity, 0);
+  filter: blur(var(--aurora-photo-blur, 0px)) saturate(1.04) brightness(0.94);
+  transition: opacity 220ms ease;
+}
+
+body[data-aurora-glass] {
+  background-color: transparent !important;
+  background-image: none !important;
+  /* Every frosted surface reads this one value, so the sidebar, the content
+     column and anything floating inside them are blurred by the same amount. */
+  /* 1.3.2: was 9px; 40% of the previous budget, everywhere at once. */
+  --aurora-glass-blur: 3.6px;
+  /* 1 = the shipped look; the Settings slider lowers it and every pane in the
+     window gets correspondingly more see-through (tokens + this sheet both
+     read the same variable). */
+  --aurora-alpha: 1;
+  accent-color: #22c55e;
+}
+
+body[data-aurora-glass] ::selection {
+  background: rgba(34, 197, 94, 0.32);
+  color: #f4fff9;
+}
+
+/* ---------- one pane of glass ---------------------------------------------- */
+/* The window is a single sheet. The sidebar, the content column and the title
+   bar are three regions of that one sheet, so the veil and the blur are painted
+   here, on the frame, and nowhere else: every column stays fully transparent and
+   simply lets this layer through. Per-column backgrounds are what made the
+   earlier builds read as two materials with a brighter bar on top. */
+body[data-aurora-glass] [class*='_frame'] {
+  background-color: rgba(4, 12, 11, calc(0.22 * var(--aurora-alpha, 1))) !important;
+  background-image: none !important;
+  backdrop-filter: blur(var(--aurora-glass-blur, 3.6px)) saturate(1.35) brightness(1.04);
+}
+
+/* `*_frame` is not unique: the app shell and the conversation pane are both named
+   `..._frame`, so the rule above painted the sheet twice over the transcript —
+   two veils and two backdrops accumulated on the content column only, which read
+   as a dark, extra-blurred box next to an untinted sidebar. Only the outermost
+   frame may carry the sheet; every nested one is cleared here. */
+body[data-aurora-glass] [class*='_frame'] [class*='_frame'] {
+  background-color: transparent !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+/* ---------- desktop window chrome ----------------------------------------- */
+/* The shell rounds the content column's top-left corner. Over a wallpaper that
+   corner reads as a stray notch, so the skin squares it off. */
+html[data-windows-titlebar] [class*='_frame'] {
+  --dsh-windows-content-radius: 0px;
+}
+
+html[data-windows-titlebar] [class*='_centerCol'] {
+  border-radius: 0 !important;
+}
+
+/* The caption buttons are painted by the shell with --dsw-specific-sidebar-fill
+   (preload samples that token with a 1x1 canvas and ships it to the window
+   overlay). Painting the title-bar strip with the same token keeps the three
+   buttons and the bar in one colour.
+
+   Opaque on purpose: Windows' title-bar overlay ignores alpha, so a translucent
+   value arrives as flat black. The client therefore mixes an opaque caption
+   colour from the opacity setting and parks it in --aurora-caption. */
+/* Windows draws the three caption buttons itself, with an opaque fill it takes
+   from --dsw-specific-sidebar-fill; alpha is ignored, so that corner can never be
+   glass. Painting the whole 40px strip in the same opaque colour is the only way
+   to avoid a mismatched rectangle: whatever the wallpaper, the buttons sit in a
+   band that is exactly their own colour, and the band reads as window chrome.
+
+   Everything below the strip stays glass. If you would rather keep glass in the
+   strip, replace this with a left-to-right gradient that only becomes the colour
+   in the last ~200px - the seam just becomes a soft edge instead of a hard one. */
+html[data-windows-titlebar] [class*='_frame']::before {
+  /* 1.3.9 — the strip is part of the sheet again. The caption colour is fully
+     transparent now, so there is no plate to match; if the buttons come out on an
+     opaque plate, go back to 1.3.8's band: background: var(--aurora-caption). */
+  background: transparent !important;
+}
+
+/* The menu bar lives in an open shadow root; its host element is the only place
+   a page can draw on that side of it, and a flex ::before lands exactly before
+   the first menu button. */
+html[data-windows-titlebar] div[data-windows-menu] {
+  /* 1.3.7 — the sidebar toggle that used to sit in this strip is hidden below,
+     so the menu starts at the window edge instead of clearing a button. */
+  left: 12px;
+  /* The host is a flex row the shell styles; make sure nothing of it can read as
+     a frame around the glyph. */
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* The sidebar collapse button is pinned into the caption strip on desktop
+   (`fixed`, 28x28 at the top-left). It is a page element, not a shell one, so a
+   skin rule can remove it: with the button gone the strip's left end is free and
+   「应用 / 编辑」 take that space. Cost: the sidebar can no longer be collapsed
+   from that control while this skin is on. */
+html[data-windows-titlebar] [class*='_logoRow'] button[class*='_toggle'] {
+  display: none !important;
+}
+
+/* The brand glyph stays off (see 1.3.5/1.3.6): nothing is drawn, so nothing can
+   turn into a box. */
+html[data-windows-titlebar] div[data-windows-menu]::before {
+  content: none;
+}
+
+/* Columns are windows onto the sheet, not panes of their own. */
+body[data-aurora-glass] [class*='_centerCol'],
+body[data-aurora-glass] [class*='_mainPanel'] {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* ---------- left sidebar --------------------------------------------------- */
+body[data-aurora-glass] [class*='_sidebarCol'],
+/* The sidebar's own root fills itself with --dsw-specific-sidebar-fill. That
+   token carries the opaque caption colour, so the pane turns pale blue while the
+   rest of the window is glass. The root paints it only while the pointer is
+   inside the sidebar (`…_quietBars` is added back on idle, which is why the fill
+   seemed to appear on hover and fade a few seconds later). Target the slot
+   wrapper instead of a state class: `data-slot="sidebar"` is part of the slot
+   contract and does not change with hover. */
+body[data-aurora-glass] [data-slot='sidebar'] > *,
+body[data-aurora-glass] [class*='_quietBars'] {
+  background-color: transparent !important;
+  background-image: none !important;
+  border-right: 0 !important;
+  box-shadow: none !important;
+}
+
+
+body[data-aurora-glass] [class*='_sidebarCol'] [class*='_newSession'] {
+  background-image: linear-gradient(135deg, #2ee06f 0%, #17a34a 100%) !important;
+  background-color: #22c55e !important;
+  color: #04160c !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  box-shadow:
+    0 10px 24px rgba(16, 128, 62, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  transition: filter 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+body[data-aurora-glass] [class*='_sidebarCol'] [class*='_newSession']:hover {
+  filter: brightness(1.08) saturate(1.05);
+  box-shadow:
+    0 12px 30px rgba(16, 128, 62, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+}
+
+body[data-aurora-glass] [class*='_sidebarCol'] [class*='_newSession'] * {
+  color: #04160c !important;
+  fill: currentColor;
+}
+
+/* No fade layer in the sidebar: rows end where the list ends. The product's
+   fade used --dsw-specific-sidebar-fill (the opaque caption colour), which put a
+   blue band under the list; a fade to the veil still tinted that band. */
+body[data-aurora-glass] [class*='_scrollFade'] {
+  display: none !important;
+}
+
+/* group captions ("工作区") get NPP's mint bullet */
+body[data-aurora-glass] [class*='_sectionLabel'] {
+  color: rgba(241, 251, 246, 0.42) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em;
+}
+
+body[data-aurora-glass] [class*='_sectionLabel']::before {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 7px;
+  border-radius: 50%;
+  vertical-align: middle;
+  background: #3ddc97;
+  box-shadow: 0 0 9px rgba(61, 220, 151, 0.9);
+}
+
+/* rows: the feature list (插件 / 插件市场 / 自动化任务 / 更多), the workspace
+   list and the project rows are ONE list style — same height, radius, rhythm,
+   typography, hover wash and selected capsule. The product already aligns their
+   leading 16px glyph column (nav) with the 16px status slot (sessions), so only
+   the surfaces and the type scale had to be brought together. */
+body[data-aurora-glass] [class*='_panelRow'],
+body[data-aurora-glass] [class*='_sessionRow'],
+body[data-aurora-glass] [class*='_projectRow'] {
+  min-height: 32px !important;
+  border-radius: 12px !important;
+  padding-left: 9px !important;
+  gap: 6px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: rgba(241, 251, 246, 0.74) !important;
+  transition: background-color 150ms ease, box-shadow 150ms ease, color 150ms ease;
+}
+
+body[data-aurora-glass] [class*='_panelRow'] [class*='_panelGlyph'],
+body[data-aurora-glass] [class*='_panelRow'] svg,
+body[data-aurora-glass] [class*='_sessionRow'] [class*='_slot'] {
+  width: 16px !important;
+  min-width: 16px !important;
+  opacity: 0.82;
+}
+
+/* the selected session gets the same mint bullet the group captions wear */
+body[data-aurora-glass] [class*='_sessionRow'] [class*='_slot']::before {
+  content: '';
+  display: block;
+  width: 5px;
+  height: 5px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: rgba(241, 251, 246, 0.18);
+  box-shadow: 0 0 0 rgba(61, 220, 151, 0);
+  transition: background 160ms ease, box-shadow 160ms ease;
+}
+
+body[data-aurora-glass] [class*='_sessionRow'][aria-selected='true'] [class*='_slot']::before,
+body[data-aurora-glass] [class*='_sessionRow'][class*='_selected'] [class*='_slot']::before {
+  background: #3ddc97;
+  box-shadow: 0 0 9px rgba(61, 220, 151, 0.9);
+}
+
+body[data-aurora-glass] [class*='_panelRow']:hover,
+body[data-aurora-glass] [class*='_sessionRow']:hover,
+body[data-aurora-glass] [class*='_projectRow']:hover,
+body[data-aurora-glass] [class*='_triggerRow']:hover {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  color: rgba(241, 251, 246, 0.94) !important;
+}
+
+body[data-aurora-glass] [class*='_triggerRow'] {
+  border-radius: 12px !important;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+/* selected session / project / active nav: NPP's active-row gradient with a
+   mint hairline. One recipe for every list in the sidebar. */
+body[data-aurora-glass] [class*='_selected'],
+body[data-aurora-glass] [aria-current='page'],
+body[data-aurora-glass] [aria-selected='true'] {
+  background-color: transparent !important;
+  background-image: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.105) 0%,
+    rgba(255, 255, 255, 0.055) 58%,
+    rgba(255, 255, 255, 0.028) 100%
+  ) !important;
+  color: #f4fff9 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(69, 214, 160, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+body[data-aurora-glass] [class*='_selected'] [class*='_title'],
+body[data-aurora-glass] [class*='_selected'] [class*='_label'],
+body[data-aurora-glass] [aria-current='page'] [class*='_title'],
+body[data-aurora-glass] [aria-current='page'] [class*='_label'] {
+  color: #f4fff9 !important;
+}
+
+/* the "展开其余 N 个会话" row indents to the same text column as the rows above */
+body[data-aurora-glass] [class*='_sessionOverflowButton'] {
+  padding-left: 31px !important;
+  border-radius: 10px !important;
+  color: rgba(241, 251, 246, 0.54) !important;
+}
+
+body[data-aurora-glass] [class*='_sessionOverflowButton']:hover {
+  background-color: rgba(255, 255, 255, 0.055) !important;
+  color: rgba(241, 251, 246, 0.86) !important;
+}
+
+/* ---------- view tabs (对话 / 轨迹 …) -------------------------------------- */
+body[data-aurora-glass] [role='tab'] {
+  border-radius: 999px;
+  padding: 2px 10px;
+  color: rgba(241, 251, 246, 0.6);
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+body[data-aurora-glass] [role='tab']:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: rgba(241, 251, 246, 0.86);
+}
+
+body[data-aurora-glass] [role='tab'][aria-selected='true'],
+body[data-aurora-glass] [role='tab'][data-state='active'] {
+  background-color: rgba(69, 214, 160, 0.14);
+  color: #eafff4;
+  box-shadow: inset 0 0 0 1px rgba(69, 214, 160, 0.26);
+}
+
+/* ---------- composer ------------------------------------------------------- */
+body[data-aurora-glass] [class*='_composerStack'] [class*='_card'] {
+  /* Deliberately deep and *not* scaled by --aurora-alpha: this is where text is
+     typed, so whatever is behind it has to disappear. */
+  background-color: rgba(7, 12, 11, 0.94) !important;
+  border-radius: 22px !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 20px 52px rgba(0, 0, 0, 0.44),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(var(--aurora-glass-blur, 3.6px));
+  -webkit-backdrop-filter: blur(var(--aurora-glass-blur, 3.6px));
+  transition: box-shadow 180ms ease, background-color 180ms ease;
+}
+
+body[data-aurora-glass] [class*='_composerStack'] [class*='_card']:focus-within {
+  background-color: rgba(8, 14, 13, 0.96) !important;
+  box-shadow:
+    0 0 0 1px rgba(69, 214, 160, 0.42),
+    0 0 0 5px rgba(34, 197, 94, 0.1),
+    0 22px 56px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09) !important;
+}
+
+/* send button: mint gradient capsule */
+body[data-aurora-glass] [class*='_composerStack'] [class*='_primary'] {
+  background-image: linear-gradient(135deg, #2ee06f 0%, #16a34a 100%) !important;
+  background-color: #22c55e !important;
+  color: #04160c !important;
+  box-shadow:
+    0 6px 18px rgba(16, 128, 62, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32) !important;
+}
+
+body[data-aurora-glass] [class*='_composerStack'] [class*='_primary']:hover {
+  filter: brightness(1.09);
+}
+
+body[data-aurora-glass] [class*='_composerStack'] [class*='_add'] {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(241, 251, 246, 0.82) !important;
+}
+
+body[data-aurora-glass] [class*='_composerStack'] [class*='_add']:hover {
+  background-color: rgba(255, 255, 255, 0.13) !important;
+}
+
+/* ---------- popovers, menus, dialogs -------------------------------------- */
+/* Floating layers do not sit in a column: they float *over* the transcript, so
+   anything translucent here lets the text underneath read as part of the
+   popover. This is the one place that must be close to opaque — same family as
+   the composer, one step further. */
+body[data-aurora-glass] [role='menu'],
+body[data-aurora-glass] [role='listbox'],
+body[data-aurora-glass] [role='dialog'],
+body[data-aurora-glass] [role='tooltip'],
+body[data-aurora-glass] [class*='_menuSurface'],
+body[data-aurora-glass] [class*='_popover'],
+body[data-aurora-glass] [class*='_tooltip'],
+body[data-aurora-glass] [class*='_cardPreview'],
+body[data-aurora-glass] [class*='_previewCard'] {
+  background-color: rgba(7, 12, 11, 0.96) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 14px !important;
+  backdrop-filter: blur(var(--aurora-glass-blur, 3.6px));
+  -webkit-backdrop-filter: blur(var(--aurora-glass-blur, 3.6px));
+  box-shadow:
+    0 26px 64px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+/* menu rows take the NPP hover wash: mint tint on a transparent row */
+body[data-aurora-glass] [role='menuitem']:hover,
+body[data-aurora-glass] [role='menuitem'][data-highlighted],
+body[data-aurora-glass] [role='option']:hover,
+body[data-aurora-glass] [role='option'][aria-selected='true'] {
+  background-color: rgba(69, 214, 160, 0.12) !important;
+  background-image: none !important;
+  color: #eafff4 !important;
+  box-shadow: inset 0 0 0 1px rgba(69, 214, 160, 0.2);
+}
+
+/* ---------- scrollbars ----------------------------------------------------- */
+body[data-aurora-glass] ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+body[data-aurora-glass] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body[data-aurora-glass] ::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.14);
+  background-clip: content-box;
+  border: 3px solid transparent;
+  border-radius: 999px;
+}
+
+body[data-aurora-glass] ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(69, 214, 160, 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-aurora-glass] * {
+    transition-duration: 1ms !important;
+  }
+}

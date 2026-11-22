@@ -1,0 +1,53 @@
+{
+  "name": "dsh-aurora-glass",
+  "version": "1.5.0",
+  "type": "module",
+  "description": "Aurora glass skin for DeepSeek Harness: wallpaper, one translucent sheet, mint accents.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lastseek/dsh-aurora-glass.git"
+  },
+  "license": "MIT",
+  "main": "lib/index.js",
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json",
+    "./locale/en.json": "./locale/en.json",
+    "./locale/zh.json": "./locale/zh.json"
+  },
+  "files": [
+    "LICENSE",
+    "lib",
+    "locale",
+    "icon.svg",
+    "cordis.patch.yml",
+    "README.md",
+    "assets"
+  ],
+  "keywords": [
+    "deepseek",
+    "dsh",
+    "dsh-plugin",
+    "theme",
+    "skin",
+    "glass"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-theme"
+      ]
+    }
+  }
+}

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Aurora Glass skin">
+  <defs>
+    <linearGradient id="aurora-tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1512"/>
+      <stop offset="1" stop-color="#04100c"/>
+    </linearGradient>
+    <linearGradient id="aurora-arc" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7dffbe"/>
+      <stop offset="1" stop-color="#159d5c"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#aurora-tile)"/>
+  <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="15.25" fill="none" stroke="#45d6a0" stroke-opacity="0.34" stroke-width="1.5"/>
+  <path d="M32 13.5 45.5 21v14L32 42.5 18.5 35V21z" fill="none" stroke="url(#aurora-arc)" stroke-width="2.2" stroke-linejoin="round"/>
+  <path d="M32 42.5V51" stroke="#45d6a0" stroke-opacity="0.6" stroke-width="2.2" stroke-linecap="round"/>
+  <circle cx="32" cy="27.5" r="4.4" fill="#8affc8"/>
+  <circle cx="18.5" cy="21" r="2.1" fill="#45d6a0"/>
+  <circle cx="45.5" cy="21" r="2.1" fill="#45d6a0"/>
+</svg>
